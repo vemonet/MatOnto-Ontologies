@@ -1,0 +1,43 @@
+name: Generate documentation
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+    - 'matonto-release.ttl'
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install ontospy[FULL]
+
+    - name: Generate docs
+      run: |
+        mkdir -p docs/summary
+        mkdir -p docs/classtree
+        mkdir -p docs/browse
+        mkdir -p docs/graph
+        ontospy gendocs -o docs/summary --type 1 --nobrowser matonto-release.ttl
+        ontospy gendocs -o docs/browse --type 2 --nobrowser matonto-release.ttl
+        ontospy gendocs -o docs/classtree --type 4 --nobrowser matonto-release.ttl
+        ontospy gendocs -o docs/graph --type 10 --nobrowser matonto-release.ttl
+
+    - name: Commit and push
+      run: |
+        git config --global user.name 'Vincent Emonet'
+        git config --global user.email 'vincent.emonet@gmail.com'
+        git add -A && git commit -m "Automatically generate documentation for matonto-release.ttl using Ontospy gendocs."
+        git push
+    
